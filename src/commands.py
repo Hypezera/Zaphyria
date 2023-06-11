@@ -233,6 +233,7 @@ async def add_role_error(ctx, error):
 async def profile(ctx, user: discord.Member = None):
     if not user:
         user = ctx.author
+    await ctx.defer()
 
     avatar_url = user.avatar.url
     nickname = user.display_name
