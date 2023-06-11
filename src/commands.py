@@ -1,3 +1,4 @@
+import requests
 from base64 import b64encode, b64decode
 import discord
 from discord.ext import commands
@@ -5,10 +6,9 @@ import asyncio
 import datetime
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
-import numpy as np
 import aiohttp
 from src.database import DbHandler
-from src.settings import DATABASE, __version__
+from src.settings import DATABASE, VERSION
 
 
 intents = discord.Intents.default()
@@ -108,7 +108,7 @@ async def set_category_error(ctx, error):
 
 @bot.slash_command(name='version', description='Return bot current version')
 async def version(ctx):
-    await ctx.respond(__version__, ephemeral=True)
+    await ctx.respond(VERSION, ephemeral=True)
 
 
 @bot.slash_command(name='info', description='Show bot information')
@@ -237,7 +237,12 @@ async def profile(ctx, user: discord.Member = None):
     avatar_url = user.avatar.url
     nickname = user.display_name
 
-    profile_image = await create_profile_image(avatar_url, nickname, user.id)
+    db = DbHandler(DATABASE)
+    if not db.view_profile(str(user.id)):
+        db.create_profile(str(user.id))
+    db.connection.close()
+
+    profile_image = await create_profile_image(avatar_url, nickname, int(user.id))
 
     file = discord.File(profile_image, filename='profile.png')
     await ctx.respond(file=file)
@@ -297,11 +302,6 @@ async def create_profile_image(avatar_url, nickname, user_id):
     async with aiohttp.ClientSession() as session:
         async with session.get(str(avatar_url)) as response:
             avatar_data = await response.read()
-
-    db = DbHandler(DATABASE)
-    if not db.view_profile(str(user_id)):
-        db.create_profile(str(user_id))
-    db.connection.close()
 
     avatar_image = Image.open(BytesIO(avatar_data))
 
@@ -391,7 +391,6 @@ async def create_profile_image(avatar_url, nickname, user_id):
     if db_profile:
         _, badge_data, bio = db_profile
         badge_data = b64decode(badge_data).decode('utf-8')
-        badge_data = await fetch_image(badge_data)
     else:
         badge_data, bio = None, ''
 
@@ -402,6 +401,7 @@ async def create_profile_image(avatar_url, nickname, user_id):
     draw.text((bio_x, bio_y), bio, (201, 201, 200), font=font)
 
     if badge_data:
+        badge_data = await fetch_image(badge_data)
         badge_image = Image.open(BytesIO(badge_data))
         badge_image_size = (font_size, font_size)
         badge_image = badge_image.resize(badge_image_size)
