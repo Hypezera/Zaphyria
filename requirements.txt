@@ -1,0 +1,6 @@
+discord==2.2.3
+discord-interactions==0.4.0
+discord-py-slash-command
+discord.py==2.2.3
+numpy==1.23.5
+Pillow==9.5.0
