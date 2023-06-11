@@ -334,7 +334,7 @@ async def create_profile_image(avatar_url, nickname, user_id):
     font_size = int(avatar_image.size[1] / 6)  # Tamanho proporcional da fonte
     
     try:
-        font = ImageFont.truetype('arial.ttf', font_size)
+        font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf', font_size)
     except OSError:
         font = ImageFont.load_default()
 
