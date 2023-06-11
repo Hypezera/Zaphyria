@@ -322,8 +322,11 @@ async def create_profile_image(avatar_url, nickname, user_id):
 
     draw = ImageDraw.Draw(profile_image)
     font_size = int(avatar_image.size[1] / 6)  # Tamanho proporcional da fonte
-    # font = ImageFont.truetype('serif.ttf', font_size)
-    font = ImageFont.load_default()
+    
+    try:
+        font = ImageFont.truetype('arial.ttf', font_size)
+    except OSError:
+        font = ImageFont.load_default()
 
     # Verificar se o usuário tem o perfil verificado
     verified_users = [978492950105432094, 832290124506333194, 588796628929085463, 269539802292944896]  # IDs dos usuários verificados
