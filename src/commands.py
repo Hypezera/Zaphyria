@@ -8,7 +8,7 @@ from io import BytesIO
 import numpy as np
 import aiohttp
 from src.database import DbHandler
-from src.settings import DATABASE
+from src.settings import DATABASE, __version__
 
 
 intents = discord.Intents.default()
@@ -104,6 +104,11 @@ async def set_category_error(ctx, error):
         await ctx.respond('You need to have administrator permission to use this command.', ephemeral=True)
     else:
         await ctx.respond('An error occurred while executing the command.', ephemeral=True)
+
+
+@bot.slash_command(name='version', description='Return bot current version')
+async def version(ctx):
+    await ctx.respond(__version__, ephemeral=True)
 
 
 @bot.slash_command(name='info', description='Show bot information')
