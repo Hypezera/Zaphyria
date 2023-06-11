@@ -5,3 +5,4 @@ discord.py==2.2.3
 numpy==1.23.5
 Pillow==9.5.0
 flask==1.1.2
+git+https://github.com/Pycord-Development/pycord
