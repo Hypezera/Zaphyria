@@ -1,7 +1,7 @@
 import os
 
 
-VERSION = '0.0.1'
+VERSION = '0.0.2'
 
 TOKEN = os.environ.get('TOKEN')
 DATABASE = os.environ.get('DATABASE', 'default.db')
