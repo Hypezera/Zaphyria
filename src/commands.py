@@ -1,3 +1,4 @@
+from base64 import b64encode, b64decode
 import discord
 from discord.ext import commands
 import asyncio
@@ -6,8 +7,8 @@ from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import numpy as np
 import aiohttp
-import sqlite3
-
+from src.database import DbHandler
+from src.settings import DATABASE
 
 
 intents = discord.Intents.default()
@@ -36,6 +37,11 @@ async def on_ready():
     
 @bot.event
 async def on_message(message):
+    db = DbHandler(DATABASE)
+    user_id = str(message.author.id)
+    if not db.view_profile(user_id):
+        db.create_profile(user_id)
+    db.connection.close()
     if isinstance(message.channel, discord.TextChannel) and message.channel.id in ticket_channels:
         ticket_channels[message.channel.id] = datetime.datetime.now()  # Atualizar o tempo da última mensagem no canal
     await bot.process_commands(message)
@@ -216,16 +222,11 @@ async def add_role(ctx, user: discord.Member, role: discord.Role):
 
 
 @add_role.error
-async def add_role_error(ctx, error):
+async def add_role_error(ctx, error): 
     if isinstance(error, commands.MissingPermissions):
         await ctx.respond('You need to have the "Manage Roles" permission to use this command.', ephemeral=True)
     else:
         await ctx.respond('An error occurred while executing the command.', ephemeral=True)
-
-
-user_biographies = {}
-user_statuses = {}
-user_badges = {}
 
 
 @bot.slash_command(name='profile', description='Mostra o perfil do usuário')
@@ -260,8 +261,10 @@ async def set_bio(ctx, bio: str):
 
     # Juntar as linhas com quebras de linha
     formatted_bio = '\n'.join(lines)
-
-    user_biographies[user_id] = formatted_bio
+    db = DbHandler(DATABASE)
+    db.update_bio(str(user_id), formatted_bio)
+    # user_biographies[user_id] = formatted_bio
+    db.connection.close()
     await ctx.respond("Bio definida com sucesso!", ephemeral=True)
 
 
@@ -277,9 +280,12 @@ async def set_badge(ctx, badge: str):
         await ctx.respond("Distintivo inválido.", ephemeral=True)
         return
 
-    badge_data = await fetch_image(badge_url)
-    user_badges[user_id] = badge_data
-
+    # badge_data = await fetch_image(badge_url)
+    badge_data = b64encode(str(badge_url).encode('utf-8')).decode('utf-8')
+    db = DbHandler(DATABASE)
+    db.update_badge(str(user_id), badge_data)
+    # user_badges[user_id] = badge_data
+    db.connection.close()
     await ctx.respond("Distintivo definido com sucesso!", ephemeral=True)
 
 
@@ -320,7 +326,7 @@ async def create_profile_image(avatar_url, nickname, user_id):
     font = ImageFont.load_default()
 
     # Verificar se o usuário tem o perfil verificado
-    verified_users = [978492950105432094, 832290124506333194, 588796628929085463]  # IDs dos usuários verificados
+    verified_users = [978492950105432094, 832290124506333194, 588796628929085463, 269539802292944896]  # IDs dos usuários verificados
     if user_id in verified_users:
         verified_icon_url = 'https://cdn.discordapp.com/attachments/1104634375699710003/1115445549840224286/dourado.png'
         verified_icon_data = await fetch_image(verified_icon_url)
@@ -336,7 +342,7 @@ async def create_profile_image(avatar_url, nickname, user_id):
         profile_image.paste(verified_icon, (verified_icon_x, verified_icon_y), mask=verified_icon)
 
     # Verificar se o usuário tem o perfil de developer
-    developers_users = [978492950105432094]  # IDs dos usuários verificados
+    developers_users = [978492950105432094, 269539802292944896]  # IDs dos usuários verificados
     if user_id in developers_users:
         developer_icon_url = 'https://cdn.discordapp.com/attachments/1115858129486356500/1117219100482089101/link_perfeito.png'
         developer_icon_data = await fetch_image(developer_icon_url)
@@ -364,8 +370,18 @@ async def create_profile_image(avatar_url, nickname, user_id):
     bio_text = "biography:"
     draw.text((bio_x, bio_y), bio_text, (63, 63, 56), font=font)
 
+    # Recupera dados do usuário do banco de dados
+    db = DbHandler(DATABASE)
+    db_profile = db.view_profile(str(user_id))
+
+
     # Verificar se o usuário tem um status personalizado
-    bio = user_biographies.get(user_id, "")
+    if db_profile:
+        _, badge_data, bio = db_profile
+        badge_data = b64decode(badge_data).decode('utf-8')
+        badge_data = await fetch_image(badge_data)
+    else:
+        badge_data, bio = None, ''
 
     # Calcular a posição do status
     bio_x = -120 + avatar_image.size[0] + 10
@@ -373,8 +389,6 @@ async def create_profile_image(avatar_url, nickname, user_id):
 
     draw.text((bio_x, bio_y), bio, (201, 201, 200), font=font)
 
-    # Verificar se o usuário tem um distintivo
-    badge_data = user_badges.get(user_id)
     if badge_data:
         badge_image = Image.open(BytesIO(badge_data))
         badge_image_size = (font_size, font_size)
@@ -396,7 +410,7 @@ async def create_profile_image(avatar_url, nickname, user_id):
     profile_image_bytes = BytesIO()
     profile_image.save(profile_image_bytes, format='PNG')
     profile_image_bytes.seek(0)
-
+    db.connection.close()
     return profile_image_bytes
 
 
