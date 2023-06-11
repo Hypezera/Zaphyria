@@ -37,11 +37,6 @@ async def on_ready():
     
 @bot.event
 async def on_message(message):
-    db = DbHandler(DATABASE)
-    user_id = str(message.author.id)
-    if not db.view_profile(user_id):
-        db.create_profile(user_id)
-    db.connection.close()
     if isinstance(message.channel, discord.TextChannel) and message.channel.id in ticket_channels:
         ticket_channels[message.channel.id] = datetime.datetime.now()  # Atualizar o tempo da última mensagem no canal
     await bot.process_commands(message)
@@ -262,6 +257,8 @@ async def set_bio(ctx, bio: str):
     # Juntar as linhas com quebras de linha
     formatted_bio = '\n'.join(lines)
     db = DbHandler(DATABASE)
+    if not db.view_profile(str(user_id)):
+        db.create_profile(str(user_id))
     db.update_bio(str(user_id), formatted_bio)
     # user_biographies[user_id] = formatted_bio
     db.connection.close()
@@ -283,6 +280,8 @@ async def set_badge(ctx, badge: str):
     # badge_data = await fetch_image(badge_url)
     badge_data = b64encode(str(badge_url).encode('utf-8')).decode('utf-8')
     db = DbHandler(DATABASE)
+    if not db.view_profile(str(user_id)):
+        db.create_profile(str(user_id))
     db.update_badge(str(user_id), badge_data)
     # user_badges[user_id] = badge_data
     db.connection.close()
@@ -293,6 +292,11 @@ async def create_profile_image(avatar_url, nickname, user_id):
     async with aiohttp.ClientSession() as session:
         async with session.get(str(avatar_url)) as response:
             avatar_data = await response.read()
+
+    db = DbHandler(DATABASE)
+    if not db.view_profile(str(user_id)):
+        db.create_profile(str(user_id))
+    db.connection.close()
 
     avatar_image = Image.open(BytesIO(avatar_data))
 
