@@ -4,10 +4,7 @@ import asyncio
 import datetime
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
-import aiohttp
 import numpy as np
-import youtube_dl
-import pytube
 import aiohttp
 import sqlite3
 
@@ -22,6 +19,8 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 ticket_channels = {}  # Dicionário para armazenar os canais de ticket e o tempo da última mensagem
 
+
+
 @bot.event 
 async def on_ready():
     activity = discord.Game(name='A perfect help for your server!', type=3)
@@ -33,13 +32,14 @@ async def on_ready():
     '''
     print('Pronto para uso!\n') 
     print(f'Nome: {bot.user}\n')
-    
+
     
 @bot.event
 async def on_message(message):
     if isinstance(message.channel, discord.TextChannel) and message.channel.id in ticket_channels:
         ticket_channels[message.channel.id] = datetime.datetime.now()  # Atualizar o tempo da última mensagem no canal
     await bot.process_commands(message)
+
 
 async def check_inactive_channels():
     while True:
@@ -53,7 +53,8 @@ async def check_inactive_channels():
                 await ticket_channel.delete(reason='Ticket apagado por inatividade')
                 del ticket_channels[channel_id]
 
-bot.loop.create_task(check_inactive_channels())
+
+# bot.loop.create_task(check_inactive_channels())
 
 
 @bot.slash_command(name='ticket', description='Create a support ticket')
@@ -95,6 +96,7 @@ async def set_category(ctx, category: discord.CategoryChannel):
     bot.ticket_categories[ctx.guild.id] = category.id
     await ctx.respond(f'The category for tickets has been set to {category.name}', ephemeral=True)
 
+
 @set_category.error
 async def set_category_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
@@ -124,32 +126,6 @@ async def info(ctx):
     await ctx.respond(info_text, ephemeral=True)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @bot.slash_command(name='clear_messages', description='Delete messages in the current channel')
 @commands.has_permissions(manage_messages=True)
 async def clear_messages(ctx, amount: int):
@@ -175,6 +151,7 @@ async def clear_messages(ctx, amount: int):
 
     await ctx.respond(f"{amount} messages have been successfully deleted.", ephemeral=True)
 
+
 @clear_messages.error
 async def clear_messages_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
@@ -183,7 +160,8 @@ async def clear_messages_error(ctx, error):
         await ctx.respond('An error occurred while executing the command.', ephemeral=True)
 
 
-bot.ticket_categories = {}  # Dictionary to store ticket categories
+# bot.ticket_categories = {}  # Dictionary to store ticket categories
+
 
 @bot.slash_command(name='avatar', description="Show a user's profile picture")
 async def avatar_command(ctx, user: discord.Member = None):
@@ -236,6 +214,7 @@ async def add_role(ctx, user: discord.Member, role: discord.Role):
     await user.add_roles(role)
     await ctx.respond(f'The role {role.name} has been assigned to {user.display_name}', ephemeral=True)
 
+
 @add_role.error
 async def add_role_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
@@ -244,69 +223,10 @@ async def add_role_error(ctx, error):
         await ctx.respond('An error occurred while executing the command.', ephemeral=True)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 user_biographies = {}
 user_statuses = {}
 user_badges = {}
+
 
 @bot.slash_command(name='profile', description='Mostra o perfil do usuário')
 async def profile(ctx, user: discord.Member = None):
@@ -320,6 +240,7 @@ async def profile(ctx, user: discord.Member = None):
 
     file = discord.File(profile_image, filename='profile.png')
     await ctx.respond(file=file)
+
 
 @bot.slash_command(name='bio', description='Define a bio do perfil')
 async def set_bio(ctx, bio: str):
@@ -343,6 +264,7 @@ async def set_bio(ctx, bio: str):
     user_biographies[user_id] = formatted_bio
     await ctx.respond("Bio definida com sucesso!", ephemeral=True)
 
+
 @bot.slash_command(name='badge', description='Define o distintivo do perfil')
 async def set_badge(ctx, badge: str):
     user_id = ctx.author.id
@@ -359,6 +281,7 @@ async def set_badge(ctx, badge: str):
     user_badges[user_id] = badge_data
 
     await ctx.respond("Distintivo definido com sucesso!", ephemeral=True)
+
 
 async def create_profile_image(avatar_url, nickname, user_id):
     async with aiohttp.ClientSession() as session:
@@ -393,7 +316,8 @@ async def create_profile_image(avatar_url, nickname, user_id):
 
     draw = ImageDraw.Draw(profile_image)
     font_size = int(avatar_image.size[1] / 6)  # Tamanho proporcional da fonte
-    font = ImageFont.truetype('arial.ttf', font_size)
+    # font = ImageFont.truetype('serif.ttf', font_size)
+    font = ImageFont.load_default()
 
     # Verificar se o usuário tem o perfil verificado
     verified_users = [978492950105432094, 832290124506333194, 588796628929085463]  # IDs dos usuários verificados
@@ -411,7 +335,7 @@ async def create_profile_image(avatar_url, nickname, user_id):
         # Posicionar o ícone verificado
         profile_image.paste(verified_icon, (verified_icon_x, verified_icon_y), mask=verified_icon)
 
-# Verificar se o usuário tem o perfil de developer
+    # Verificar se o usuário tem o perfil de developer
     developers_users = [978492950105432094]  # IDs dos usuários verificados
     if user_id in developers_users:
         developer_icon_url = 'https://cdn.discordapp.com/attachments/1115858129486356500/1117219100482089101/link_perfeito.png'
@@ -426,7 +350,6 @@ async def create_profile_image(avatar_url, nickname, user_id):
 
         # Posicionar o ícone de developer
         profile_image.paste(developer_icon, (developer_icon_x, developer_icon_y), mask=developer_icon)
-
 
     # Calcular a posição do nickname
     nickname_x = 55 + avatar_image.size[0] + 10
@@ -476,52 +399,11 @@ async def create_profile_image(avatar_url, nickname, user_id):
 
     return profile_image_bytes
 
+
 async def fetch_image(url):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             return await response.read()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 @bot.slash_command(name='servericon', description='Shows a server icon')
@@ -552,27 +434,3 @@ async def server_icon(ctx, server: str):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-bot.run('')
