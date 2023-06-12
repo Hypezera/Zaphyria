@@ -1,4 +1,4 @@
-import requests
+
 from base64 import b64encode, b64decode
 import discord
 from discord.ext import commands
@@ -114,19 +114,15 @@ async def version(ctx):
 @bot.slash_command(name='info', description='Show bot information')
 async def info(ctx):
     info_text = """
-    Hello! I am a support bot. I'm here to help you create and manage support tickets in your Discord server.
-    
-    With the `/ticket` command, you can create a support ticket and receive an exclusive channel for communication with the support team.
-    
-    Use the `/setcategory` command to define the category where ticket channels will be created.
-    Note: This command can only be used by an administrator!
+<:veriefedbadge:1117304195582795808> Zaphyria: A Multipurpose Bot, Profile System, and Ticket System
 
-    Use the `/clear_messages` command to delete messages in the current channel.
-    Note: To use this command, you need the permission to manage messages!
-    
-    Use the `/avatar` command to view user avatars!
+Introducing Zaphyria, an all-in-one bot that offers a wide range of features for your server. With Zaphyria, you can enjoy versatile features such as a simplified profile system to display information about yourself and get badges quickly and easily.
 
-    I hope to assist with all your support needs!
+In addition to the profile system, Zaphyria also has an integrated ticket system. This system allows server members to create tickets to report issues, make requests or seek support. Administrators have the facility to track and respond to demands in an organized manner, providing an efficient and structured support environment for users.
+
+With Zaphyria, you have access to a perfect combination between a simple profile system, in which you can easily secure your first badges, and a ticket system for a more efficient management of requests on the server.
+
+Try Zaphyria now and enjoy all these valuable features to improve interaction and organization on your server.
     """
 
     await ctx.respond(info_text, ephemeral=True)
@@ -229,7 +225,7 @@ async def add_role_error(ctx, error):
         await ctx.respond('An error occurred while executing the command.', ephemeral=True)
 
 
-@bot.slash_command(name='profile', description='Mostra o perfil do usuário')
+@bot.slash_command(name='profile', description='Show user profile')
 async def profile(ctx, user: discord.Member = None):
     if not user:
         user = ctx.author
@@ -249,12 +245,12 @@ async def profile(ctx, user: discord.Member = None):
     await ctx.respond(file=file)
 
 
-@bot.slash_command(name='bio', description='Define a bio do perfil')
+@bot.slash_command(name='bio', description='Set profile bio')
 async def set_bio(ctx, bio: str):
     user_id = ctx.author.id
 
     if len(bio) > 150:
-        await ctx.respond("A bio deve ter no máximo 150 caracteres.", ephemeral=True)
+        await ctx.respond("Bio must have a maximum of 150 characters.", ephemeral=True)
         return
 
     # Quebrar a bio em linhas de até 35 caracteres
@@ -273,10 +269,10 @@ async def set_bio(ctx, bio: str):
     db.update_bio(str(user_id), formatted_bio)
     # user_biographies[user_id] = formatted_bio
     db.connection.close()
-    await ctx.respond("Bio definida com sucesso!", ephemeral=True)
+    await ctx.respond("Bio defined successfully!", ephemeral=True)
 
 
-@bot.slash_command(name='badge', description='Define o distintivo do perfil')
+@bot.slash_command(name='badge', description='Set profile badge')
 async def set_badge(ctx, badge: str):
     user_id = ctx.author.id
 
@@ -296,7 +292,7 @@ async def set_badge(ctx, badge: str):
     db.update_badge(str(user_id), badge_data)
     # user_badges[user_id] = badge_data
     db.connection.close()
-    await ctx.respond("Distintivo definido com sucesso!", ephemeral=True)
+    await ctx.respond("Badge set successfully!", ephemeral=True)
 
 
 async def create_profile_image(avatar_url, nickname, user_id):
@@ -341,7 +337,7 @@ async def create_profile_image(avatar_url, nickname, user_id):
     # Verificar se o usuário tem o perfil verificado
     verified_users = [978492950105432094, 832290124506333194, 588796628929085463, 269539802292944896]  # IDs dos usuários verificados
     if user_id in verified_users:
-        verified_icon_url = 'https://cdn.discordapp.com/attachments/1104634375699710003/1115445549840224286/dourado.png'
+        verified_icon_url = 'https://cdn.discordapp.com/attachments/1115091059391864842/1117633534279028846/verificado_azul.png'
         verified_icon_data = await fetch_image(verified_icon_url)
         verified_icon = Image.open(BytesIO(verified_icon_data))
         verified_icon_size = (font_size, font_size)
